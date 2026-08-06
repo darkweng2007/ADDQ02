@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>酒精依賴程度評估量表 (ADDQ)</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --hover-color: #2980b9;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-radius: 16px;
+            --shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 35px 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 頂部進度條 */
+        .progress-header {
+            margin-bottom: 25px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent-color);
+            transition: width 0.3s ease;
+        }
+
+        /* 封面區塊 */
+        .intro-screen, .result-screen {
+            text-align: center;
+        }
+
+        .intro-screen h1 {
+            color: var(--primary-color);
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .intro-screen p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            font-size: 15px;
+        }
+
+        /* 單題卡片區塊 */
+        .card-container {
+            display: none;
+        }
+
+        .question-card {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .question-card.active {
+            display: block;
+        }
+
+        .question-title {
+            font-size: 19px;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            line-height: 1.5;
+            font-weight: 600;
+        }
+
+        /* 選項按鈕區 */
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 16px 20px;
+            font-size: 16px;
+            color: var(--text-color);
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            outline: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option-btn:hover {
+            border-color: var(--accent-color);
+            background-color: #f0f7fc;
+            transform: translateY(-2px);
+        }
+
+        .option-btn.selected {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        /* 導航按鈕 */
+        .nav-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--hover-color);
+        }
+
+        .btn-secondary {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-secondary:hover {
+            background-color: #dee2e6;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 結算卡片 */
+        .result-screen {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin: 15px 0;
+        }
+
+        .result-level {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .level-low { background-color: #e8f8f5; color: #1abc9c; }
+        .level-mid { background-color: #fef9e7; color: #f39c12; }
+        .level-high { background-color: #fadbd8; color: #e74c3c; }
+
+        .result-desc {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="intro-screen" class="intro-screen">
+        <h1>酒精依賴程度評估量表 (ADDQ)</h1>
+        <p>本量表共包含 15 道題目，旨在評估您近期的飲酒習慣與身體反應。請根據您的真實情況點選最符合的選項。</p>
+        <button class="btn btn-primary" onclick="startQuiz()">開始評估</button>
+    </div>
+
+    <div id="card-container" class="card-container">
+        <div class="progress-header">
+            <div class="progress-info">
+                <span>題目進度</span>
+                <span id="progress-text">1 / 15</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div id="progress-bar" class="progress-bar-fill"></div>
+            </div>
+        </div>
+
+        <div id="questions-wrapper"></div>
+
+        <div class="nav-controls">
+            <button id="prev-btn" class="btn btn-secondary" onclick="prevQuestion()" disabled>上一題</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-screen">
+        <h2>評估結果</h2>
+        <div id="result-score" class="result-score">0 分</div>
+        <div id="result-level" class="result-level">依賴程度評估中</div>
+        <div id="result-desc" class="result-desc"></div>
+        <button class="btn btn-primary" onclick="restartQuiz()">重新評估</button>
+    </div>
+</div>
+
+<script>
+    // 15 道 ADDQ 題目資料
+    const questions = [
+        "你很難克服心中想喝酒的意念嗎？",
+        "你覺得喝酒比正餐更重要嗎？",
+        "你會計畫一天中何時或何地可以喝酒嗎？",
+        "你早晨、下午、晚間都有喝酒嗎？",
+        "喝酒時，你比較在乎的是喝酒後的效果而非酒的味道嗎？",
+        "不論你明天有什麼事情要做，你總是盡可能喝到自己滿足的量為止？",
+        "被告知喝酒的壞處後，你仍會想喝酒嗎？",
+        "一旦你開始喝酒，你很難停止繼續喝酒嗎？",
+        "你是否曾經試著連續幾天或幾週不喝酒？",
+        "昨天喝了大量酒精後，你今天早晨會需要喝酒來讓自己清醒嗎？",
+        "昨天喝了大量酒精後，你今天早晨會明顯感受到手抖嗎？",
+        "昨天喝了大量酒精後，你今天早晨會覺得噁心或嘔吐嗎？",
+        "昨天喝了大量酒精後，你今天會想辦法避開人群而不與人接觸嗎？",
+        "喝了大量酒精後，你會看到令你覺得可怕的幻覺嗎？",
+        "你喝酒後會忘記前一天發生的事情嗎？"
+    ];
+
+    // 選項與對應分數 (從未=0, 有時=1, 常常=2, 總是=3)
+    const options = [
+        { label: "從未", score: 0 },
+        { label: "有時", score: 1 },
+        { label: "常常", score: 2 },
+        { label: "總是", score: 3 }
+    ];
+
+    let currentQuestionIndex = 0;
+    let userAnswers = new Array(questions.length).fill(null);
+
+    // 初始化測驗卡片
+    function initQuiz() {
+        const wrapper = document.getElementById('questions-wrapper');
+        wrapper.innerHTML = '';
+
+        questions.forEach((qText, index) => {
+            const card = document.createElement('div');
+            card.className = `question-card ${index === 0 ? 'active' : ''}`;
+            card.id = `question-card-${index}`;
+
+            let optionsHTML = options.map((opt, optIndex) => `
+                <button class="option-btn" onclick="selectOption(${index}, ${opt.score}, this)">
+                    <span>${opt.label}</span>
+                </button>
+            `).join('');
+
+            card.innerHTML = `
+                <div class="question-title">${index + 1}. ${qText}</div>
+                <div class="options-grid">${optionsHTML}</div>
+            `;
+            wrapper.appendChild(card);
+        });
+    }
+
+    // 開始測驗
+    function startQuiz() {
+        document.getElementById('intro-screen').style.display = 'none';
+        document.getElementById('card-container').style.display = 'block';
+        currentQuestionIndex = 0;
+        updateUI();
+    }
+
+    // 選擇選項並進入下一題
+    function selectOption(qIndex, score, btnElement) {
+        userAnswers[qIndex] = score;
+
+        // 更新按鈕選取狀態
+        const parent = btnElement.parentElement;
+        const buttons = parent.querySelectorAll('.option-btn');
+        buttons.forEach(btn => btn.classList.remove('selected'));
+        btnElement.classList.add('selected');
+
+        // 短暫延遲提升流暢感，之後切換下一題
+        setTimeout(() => {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                updateUI();
+            } else {
+                showResults();
+            }
+        }, 250);
+    }
+
+    // 上一題
+    function prevQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            updateUI();
+        }
+    }
+
+    // 更新進度條與卡片顯示
+    function updateUI() {
+        // 更新卡片切換
+        const cards = document.querySelectorAll('.question-card');
+        cards.forEach((card, idx) => {
+            card.classList.toggle('active', idx === currentQuestionIndex);
+        });
+
+        // 更新進度條
+        const progressPercent = ((currentQuestionIndex + 1) / questions.length) * 100;
+        document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+        document.getElementById('progress-text').innerText = `${currentQuestionIndex + 1} / ${questions.length}`;
+
+        // 更新上一題按鈕狀態
+        document.getElementById('prev-btn').disabled = (currentQuestionIndex === 0);
+    }
+
+    // 計算總分與顯示結果
+    function showResults() {
+        const totalScore = userAnswers.reduce((sum, score) => sum + (score || 0), 0);
+
+        document.getElementById('card-container').style.display = 'none';
+        const resultScreen = document.getElementById('result-screen');
+        resultScreen.style.display = 'block';
+
+        document.getElementById('result-score').innerText = `${totalScore} / 45 分`;
+
+        const levelEl = document.getElementById('result-level');
+        const descEl = document.getElementById('result-desc');
+
+        if (totalScore <= 10) {
+            levelEl.innerText = "輕度或低度酒精依賴風險";
+            levelEl.className = "result-level level-low";
+            descEl.innerHTML = "您的飲酒習慣目前處於相對安全的範圍。建議繼續保持健康的作息與節制飲酒習慣，避免將酒精作為紓解壓力或情緒的主要管道。";
+        } else if (totalScore <= 25) {
+            levelEl.innerText = "中度酒精依賴風險";
+            levelEl.className = "result-level level-mid";
+            descEl.innerHTML = "您可能已經開始出現對酒精的生理或心理依賴傾向，飲酒行為可能已影響到日常作息或健康。建議開始嘗試進行「減酒計劃」，並留意自己在特定情境下的飲酒衝動。";
+        } else {
+            levelEl.innerText = "高度酒精依賴風險";
+            levelEl.className = "result-level level-high";
+            descEl.innerHTML = "您的評估結果顯示具有較高的酒精依賴或成癮傾向，且可能伴隨明顯的戒斷症狀或社交生活困擾。強烈建議諮詢精神科醫師、臨床心理師或醫療院所戒癮門診，尋求專業的醫療與行為調整協助。";
+        }
+    }
+
+    // 重新測驗
+    function restartQuiz() {
+        userAnswers.fill(null);
+        document.getElementById('result-screen').style.display = 'none';
+        document.getElementById('intro-screen').style.display = 'block';
+        initQuiz();
+    }
+
+    // 頁面載入時初始化
+    window.onload = initQuiz;
+</script>
+
+</body>
+</html>
